@@ -15,7 +15,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { X } from "lucide-react";
-import { createPoll } from "@/app/polls/actions";
+import { createPoll } from "@/app/(auth)/actions";
 import { useTransition } from "react";
 
 export default function CreatePollForm() {

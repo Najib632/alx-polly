@@ -1,38 +1,11 @@
 import Link from "next/link";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import PollCard from "@/components/polls/poll-card";
-
-// TODO: This is placeholder data. Fetch real poll data from Supabase
-// for the currently authenticated user.
-const polls = [
-  {
-    id: "1",
-    question: "What should we have for lunch?",
-    options: [{ text: "Pizza" }, { text: "Salad" }],
-    totalVotes: 15,
-  },
-  {
-    id: "2",
-    question: "Favorite programming language?",
-    options: [{ text: "TypeScript" }, { text: "Python" }, { text: "Rust" }],
-    totalVotes: 42,
-  },
-];
+import { getPolls } from "@/lib/polling"; // Import the new server action
 
 export default async function PollsDashboard() {
-  const cookieStore = cookies();
-  const supabase = createClient(cookieStore);
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/login");
-  }
+  // Fetch polls using the server action
+  const polls = await getPolls();
 
   return (
     <div className="container mx-auto p-4 md:p-6">
@@ -43,12 +16,25 @@ export default async function PollsDashboard() {
         </Button>
       </div>
 
-      {/* TODO: Add a message or illustration for when the user has no polls. */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {polls.map((poll) => (
-          <PollCard key={poll.id} poll={poll} />
-        ))}
-      </div>
+      {/* Display a message if there are no polls */}
+      {polls.length === 0 ? (
+        <div className="text-center py-8 text-muted-foreground">
+          You haven't created any polls yet. Click the button above to create
+          your first one!
+        </div>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {/* Map through fetched polls and render PollCard for each */}
+          {polls.map((poll) => (
+            // Ensure the poll object passed to PollCard matches its expected props
+            <PollCard key={poll.id} poll={poll as any} />
+            // Note: The `as any` cast might be needed if PollCard expects
+            // slightly different structure than FetchedPoll, e.g., if it
+            // expects 'totalVotes' to always be a number and not null.
+            // We'll refine this if necessary.
+          ))}
+        </div>
+      )}
     </div>
   );
 }
