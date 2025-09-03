@@ -11,9 +11,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { getPollById, castVote } from "@/lib/polling"; // Import castVote from lib/polling.ts
+import {
+  getPollById,
+  castVote,
+  deleteVote,
+  updatePollQuestion,
+} from "@/lib/polling"; // Import castVote from lib/polling.ts
 import { useParams } from "next/navigation";
 
 // Define the structure that getPollById will return
@@ -23,6 +29,8 @@ interface PollDisplayData {
   description?: string | null;
   options: { id: string; text: string; votes: number }[];
   totalVotes: number;
+  hasVoted: boolean;
+  isOwner: boolean;
 }
 
 export default function PollPage() {
@@ -36,6 +44,9 @@ export default function PollPage() {
   const [voted, setVoted] = useState(false); // State to control showing results or voting form
   const [isCastingVote, setIsCastingVote] = useState(false); // State for vote submission loading
   const [voteMessage, setVoteMessage] = useState<string | null>(null); // State for vote feedback
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedQuestion, setEditedQuestion] = useState("");
+  const [editedDescription, setEditedDescription] = useState("");
 
   // Function to fetch poll data
   const fetchPoll = async () => {
@@ -48,8 +59,9 @@ export default function PollPage() {
       const data = await getPollById(pollId);
       if (data) {
         setPollData(data);
-        // TODO: Implement logic to check if the current user has already voted
-        // and set `voted` state accordingly. This would involve another Supabase query.
+        setVoted(data.hasVoted); // Set voted status from fetched data
+        setEditedQuestion(data.question);
+        setEditedDescription(data.description || "");
       } else {
         setError("Could not find poll or an error occurred.");
       }
@@ -92,6 +104,32 @@ export default function PollPage() {
     setIsCastingVote(false);
   };
 
+  const handleDelete = async () => {
+    if (!pollData) return;
+    const confirmation = window.confirm(
+      "Are you sure you want to delete this poll?",
+    );
+    if (confirmation) {
+      await deleteVote(pollData.id);
+    }
+  };
+
+  const handleUpdate = async () => {
+    if (!pollData) return;
+    const result = await updatePollQuestion(
+      pollData.id,
+      editedQuestion,
+      editedDescription,
+    );
+    if (result.success) {
+      setIsEditing(false);
+      fetchPoll();
+    } else {
+      // Handle error
+      console.error(result.message);
+    }
+  };
+
   if (loading) {
     return <div className="container mx-auto p-4 md:p-6">Loading poll...</div>;
   }
@@ -109,9 +147,28 @@ export default function PollPage() {
       <div className="md:col-span-2">
         <Card>
           <CardHeader>
-            <CardTitle>{pollData.question}</CardTitle>
-            {pollData.description && (
-              <CardDescription>{pollData.description}</CardDescription>
+            {isEditing ? (
+              <div className="space-y-2">
+                <Label htmlFor="question">Question</Label>
+                <Input
+                  id="question"
+                  value={editedQuestion}
+                  onChange={(e) => setEditedQuestion(e.target.value)}
+                />
+                <Label htmlFor="description">Description (optional)</Label>
+                <Input
+                  id="description"
+                  value={editedDescription}
+                  onChange={(e) => setEditedDescription(e.target.value)}
+                />
+              </div>
+            ) : (
+              <>
+                <CardTitle>{pollData.question}</CardTitle>
+                {pollData.description && (
+                  <CardDescription>{pollData.description}</CardDescription>
+                )}
+              </>
             )}
           </CardHeader>
           <CardContent>
@@ -168,7 +225,7 @@ export default function PollPage() {
               </div>
             )}
           </CardContent>
-          <CardFooter>
+          <CardFooter className="flex justify-between">
             {!voted && (
               <Button
                 onClick={handleVote}
@@ -176,6 +233,33 @@ export default function PollPage() {
               >
                 {isCastingVote ? "Submitting Vote..." : "Submit Vote"}
               </Button>
+            )}
+            {pollData.isOwner && (
+              <div className="flex gap-2">
+                {isEditing ? (
+                  <>
+                    <Button onClick={handleUpdate}>Save</Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsEditing(false)}
+                    >
+                      Cancel
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsEditing(true)}
+                    >
+                      Edit
+                    </Button>
+                    <Button variant="destructive" onClick={handleDelete}>
+                      Delete
+                    </Button>
+                  </>
+                )}
+              </div>
             )}
           </CardFooter>
         </Card>

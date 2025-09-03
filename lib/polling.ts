@@ -22,6 +22,8 @@ type PollWithVoteData = Pick<
 > & {
   options: Array<{ id: string; text: string; votes: number }>;
   totalVotes: number;
+  hasVoted: boolean;
+  isOwner: boolean;
 };
 
 export async function getPolls(): Promise<FetchedPoll[]> {
@@ -103,11 +105,15 @@ export async function getPollById(
   const cookieStore = cookies();
   const supabase = createClient(cookieStore);
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   // Fetch the specific poll and its options.
   // We'll fetch options separately and then fetch their vote counts.
   const { data: poll, error: pollError } = await supabase
     .from("polls")
-    .select("id, question, description, created_at") // Fetch poll basic details
+    .select("id, question, description, created_at, owner_id") // Fetch owner_id
     .eq("id", pollId)
     .single();
 
@@ -119,6 +125,28 @@ export async function getPollById(
   if (!poll) {
     return null; // Poll not found
   }
+
+  let hasVoted = false;
+  if (user) {
+    const { data: vote, error: voteError } = await supabase
+      .from("votes")
+      .select("id")
+      .eq("poll_id", pollId)
+      .eq("voter_uid", user.id)
+      .maybeSingle();
+
+    if (voteError) {
+      console.error(
+        `Error checking for existing vote on poll ${pollId}:`,
+        voteError,
+      );
+    }
+    if (vote) {
+      hasVoted = true;
+    }
+  }
+
+  const isOwner = user ? user.id === poll.owner_id : false;
 
   // Fetch options for this specific poll
   const { data: optionsData, error: optionsError } = await supabase
@@ -141,6 +169,8 @@ export async function getPollById(
       created_at: poll.created_at,
       options: [],
       totalVotes: 0,
+      hasVoted,
+      isOwner,
     };
   }
 
@@ -168,6 +198,8 @@ export async function getPollById(
         votes: 0, // Default to 0 votes if count fetching fails
       })),
       totalVotes: 0,
+      hasVoted,
+      isOwner,
     };
   }
 
@@ -198,6 +230,8 @@ export async function getPollById(
       (sum, option) => sum + (voteCountsMap.get(option.id) || 0),
       0,
     ),
+    hasVoted,
+    isOwner,
   };
 
   return formattedPoll;
@@ -225,4 +259,49 @@ export async function castVote(pollId: string, optionId: string) {
   revalidatePath(`/polls/${pollId}`);
   revalidatePath("/polls");
   return { success: true, message: "Vote cast successfully!" };
+}
+
+export async function deleteVote(pollId: string) {
+  const cookieStore = cookies();
+  const supabase = createClient(cookieStore);
+
+  const { error } = await supabase.from("polls").delete().match({ id: pollId });
+
+  if (error) {
+    console.error(`Error deleting poll with ID ${pollId}:`, error);
+    return {
+      success: false,
+      message: error.message || "Failed to delete poll.",
+    };
+  }
+
+  revalidatePath("/polls");
+  redirect("/polls");
+}
+
+export async function updatePollQuestion(
+  pollId: string,
+  newQuestion: string,
+  newDescription?: string | null,
+) {
+  const cookieStore = cookies();
+  const supabase = createClient(cookieStore);
+
+  const { error } = await supabase
+    .from("polls")
+    .update({ question: newQuestion, description: newDescription })
+    .eq("id", pollId);
+
+  if (error) {
+    console.error(`Error updating poll with ID ${pollId}:`, error);
+    return {
+      success: false,
+      message: error.message || "Failed to update poll.",
+    };
+  }
+
+  revalidatePath(`/polls/${pollId}`);
+  revalidatePath("/polls");
+
+  return { success: true, message: "Poll updated successfully." };
 }
