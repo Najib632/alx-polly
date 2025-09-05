@@ -1,11 +1,21 @@
+"use client";
+
 import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import PollCard from "@/components/polls/poll-card";
-import { getPolls } from "@/lib/polling"; // Import the new server action
+import { getPolls } from "@/lib/polling";
 
-export default async function PollsDashboard() {
-  // Fetch polls using the server action
-  const polls = await getPolls();
+export default function PollsDashboard() {
+  // Fetch polls using the useQuery hook
+  const {
+    data: polls,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["polls"],
+    queryFn: getPolls,
+  });
 
   return (
     <div className="container mx-auto p-4 md:p-6">
@@ -16,8 +26,16 @@ export default async function PollsDashboard() {
         </Button>
       </div>
 
-      {/* Display a message if there are no polls */}
-      {polls.length === 0 ? (
+      {/* Handle loading and error states */}
+      {isLoading ? (
+        <div className="text-center py-8 text-muted-foreground">
+          Loading your polls...
+        </div>
+      ) : isError ? (
+        <div className="text-center py-8 text-red-500">
+          There was an error fetching your polls. Please try again later.
+        </div>
+      ) : polls && polls.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">
           You haven't created any polls yet. Click the button above to create
           your first one!
@@ -25,7 +43,7 @@ export default async function PollsDashboard() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {/* Map through fetched polls and render PollCard for each */}
-          {polls.map((poll) => (
+          {polls?.map((poll) => (
             // Ensure the poll object passed to PollCard matches its expected props
             <PollCard key={poll.id} poll={poll as any} />
             // Note: The `as any` cast might be needed if PollCard expects

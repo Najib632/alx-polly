@@ -5,6 +5,7 @@ import LogoutButton from "@/components/auth/logout-button"; // Import the Logout
 import { createClient } from "@/lib/supabase/server"; // Import server client
 import { cookies } from "next/headers"; // Import cookies
 import Link from "next/link";
+import { QueryProvider } from "@/lib/providers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,35 +40,37 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <header className="flex w-full px-4 py-2 bg-background border-b items-center justify-between">
-          <p className="font-bold">Polly App</p> {/* Simple branding */}
-          {user ? (
-            <div className="flex items-center gap-4">
-              <p className="text-sm text-muted-foreground">
-                Hello, {user.email}
-              </p>
-              <LogoutButton />
-            </div>
-          ) : (
-            // Optionally, show login/signup links if user is not logged in, though
-            // the /polls route will redirect them automatically.
-            <div className="flex items-center gap-2">
-              <Link
-                href="/login"
-                className="text-sm font-medium hover:underline"
-              >
-                Login
-              </Link>
-              <Link
-                href="/signup"
-                className="text-sm font-medium hover:underline"
-              >
-                Sign Up
-              </Link>
-            </div>
-          )}
-        </header>
-        {children}
+        <QueryProvider>
+          <header className="flex w-full px-4 py-2 bg-background border-b items-center justify-between">
+            <p className="font-bold">Polly App</p> {/* Simple branding */}
+            {user ? (
+              <div className="flex items-center gap-4">
+                <p className="text-sm text-muted-foreground">
+                  Hello, {user.email}
+                </p>
+                <LogoutButton />
+              </div>
+            ) : (
+              // Optionally, show login/signup links if user is not logged in, though
+              // the /polls route will redirect them automatically.
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/login"
+                  className="text-sm font-medium hover:underline"
+                >
+                  Login
+                </Link>
+                <Link
+                  href="/signup"
+                  className="text-sm font-medium hover:underline"
+                >
+                  Sign Up
+                </Link>
+              </div>
+            )}
+          </header>
+          {children}
+        </QueryProvider>
       </body>
     </html>
   );
