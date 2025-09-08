@@ -7,6 +7,39 @@ import PollCard from "@/components/polls/poll-card";
 import { getPolls } from "@/lib/polling";
 
 export default function PollsDashboard() {
+  /**
+   * Renders the main dashboard for viewing and managing user-created polls.
+   *
+   * Why this component is needed:
+   * This component serves as the central hub for a user's interaction with their
+   * polls. It provides a high-level overview of all their created polls and acts
+   * as a jumping-off point for creating new ones. By centralizing this view, it
+   * improves user experience by giving them a clear and organized way to see
+   * their content.
+   *
+   * @component
+   * @returns {JSX.Element} The rendered dashboard UI.
+   *
+   * @assumptions
+   * - This component is a client component, as indicated by `"use client"`.
+   * - It is wrapped in a `QueryClientProvider` from `@tanstack/react-query` to
+   *   enable the `useQuery` hook.
+   * - The `getPolls` function handles user authentication implicitly (e.g., via
+   *   cookies or auth tokens) to fetch only the polls belonging to the current user.
+   *
+   * @edgeCases
+   * - **Loading:** Displays a "Loading..." message while polls are being fetched.
+   * - **Error:** Displays an error message if the API call to `getPolls` fails.
+   * - **Empty State:** If the user has not created any polls, it displays a
+   *   call-to-action message instead of an empty grid.
+   *
+   * @see {@link PollCard} - This is a child component that `PollsDashboard` maps over
+   *   the fetched poll data to render. Each `PollCard` is responsible for displaying
+   *   the summary of a single poll.
+   * @see {@link getPolls} - The server action or API client function used to fetch the
+   *   array of polls from the backend.
+   */
+
   // Fetch polls using the useQuery hook
   const {
     data: polls,

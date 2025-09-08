@@ -34,6 +34,46 @@ interface PollDisplayData {
 }
 
 export default function PollPage() {
+  /**
+   * Renders the dedicated page for a single poll.
+   *
+   * @purpose This component serves as the primary interface for users to interact with a specific poll.
+   * It fetches the poll's data based on the ID from the URL, displays the question and options,
+   * and manages all user interactions like voting, viewing results, editing, deleting, and sharing.
+   *
+   * @context This component is designed to be a dynamic page within a Next.js application,
+   * typically corresponding to a route like `/polls/[id]`. It's a "smart" component that handles
+   * its own state management and data fetching logic for everything related to a single poll.
+   *
+   * @assumptions
+   * - The component is rendered within a Next.js dynamic route (`/polls/[id]`) where `id` is the poll's unique identifier.
+   * - The `useParams` hook from `next/navigation` will successfully provide this `id`.
+   * - A suite of API utility functions (`getPollById`, `castVote`, `deleteVote`, `updatePollQuestion`)
+   *   are available in `@/lib/polling` to communicate with the backend.
+   * - The `PollDisplayData` interface correctly matches the shape of the data returned by `getPollById`.
+   * - UI components from `@/components/ui` (e.g., Card, Button, Input) are properly configured and available.
+   *
+   * @stateManagement
+   * - `pollData`: Stores the fetched poll details.
+   * - `loading`: Tracks the initial data fetch state.
+   * - `error`: Stores any errors that occur during data fetching.
+   * - `voted`: A boolean that toggles the view between the voting form and the results display. This is initialized based on the `hasVoted` property from the fetched data.
+   * - `selectedOption`: Holds the ID of the option the user has selected before voting.
+   * - `isCastingVote`: A loading state specifically for the vote submission process.
+   * - `isEditing`: Toggles the view between displaying the poll question and an editing form (for the poll owner).
+   *
+   * @edgeCases
+   * - **Invalid/Missing Poll ID:** If the URL parameter `id` is not a valid poll ID or if the poll doesn't exist, an error message is displayed.
+   * - **Network Failure:** If `getPollById` or other API calls fail due to network issues, an error state is triggered.
+   * - **UI State:** The "Submit Vote" button is disabled until an option is selected to prevent empty submissions. The button also shows a loading state during the submission process.
+   * - **Authorization:** Edit and Delete controls are only rendered if the fetched `pollData.isOwner` flag is true. The backend is the ultimate authority on these actions.
+   *
+   * @connections
+   * - **`@/lib/polling`**: This component is tightly coupled with the polling library functions for all its server interactions.
+   * - **`next/navigation`**: Uses `useParams` to get the poll ID from the URL, linking it directly to the routing system.
+   * - **UI Library (`@/components/ui`)**: Heavily relies on these shared components for a consistent look and feel.
+   * - **`qrcode.react`**: Used to generate a scannable QR code for easy sharing of the poll's URL.
+   */
   const params = useParams();
   const pollId = params.id as string;
 

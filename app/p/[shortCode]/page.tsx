@@ -2,12 +2,37 @@ import { createClient } from "@/lib/supabase/server"; // Server-side Supabase cl
 import { cookies } from "next/headers"; // To get cookies for the server client
 import { redirect } from "next/navigation"; // Next.js redirect function
 
-// This is a Server Component, so it runs on the server.
 export default async function ShortLinkRedirectPage({
   params,
 }: {
   params: { shortCode: string };
 }) {
+  /**
+   * ShortLinkRedirectPage: A server-side component that resolves a short URL
+   * to its corresponding full poll page.
+   *
+   * @purpose This component provides a user-friendly sharing mechanism. Instead of
+   * sharing a long, complex poll ID (UUID), users can share a short, memorable
+   * link (e.g., `/s/abc123`). This page intercepts that request, looks up the
+   * short code in the database, and redirects the user to the correct poll page.
+   * This is essential for improving the shareability and overall user experience of the app.
+   *
+   * @assumptions
+   * - This component is a dynamic route handler in a Next.js App Router setup, likely located at `app/s/[shortCode]/page.tsx`.
+   * - A `polls` table exists in the Supabase database with a unique `short_code` column and a primary `id` column.
+   * - The `createClient` utility correctly configures and returns a server-side Supabase client instance.
+   *
+   * @edge_cases
+   * - If the `shortCode` is missing from the URL, the user is redirected to the homepage (`/`).
+   * - If the provided `shortCode` does not match any record in the `polls` table, or if a database error occurs,
+   *   the error is logged to the server console, and the user is redirected to the homepage.
+   *
+   * @connections
+   * - **Receives from:** This page is the destination for any short link shared by users. The `short_code` itself is
+   *   generated and associated with a poll ID during the poll creation process (e.g., on a `CreatePoll` form/page).
+   * - **Redirects to:** After successfully finding the poll ID, it redirects the user to the main poll details page
+   *   (e.g., `/polls/[pollId]`), where they can view details and vote.
+   */
   const cookieStore = cookies();
   const supabase = createClient(cookieStore);
 
