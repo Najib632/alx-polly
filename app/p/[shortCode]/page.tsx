@@ -36,7 +36,7 @@ export default async function ShortLinkRedirectPage({
   const cookieStore = cookies();
   const supabase = createClient(cookieStore);
 
-  const shortCode = params.shortCode;
+  const { shortCode } = params;
 
   if (!shortCode) {
     // If no shortCode is provided, redirect to the home page or a 404 page.
