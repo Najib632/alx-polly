@@ -1,12 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { Menu, X, BarChart3 } from "lucide-react";
-import LogoutButton from "@/components/auth/logout-button";
-import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+import NavLinks from "./nav-links";
+import AuthButtons from "./auth-buttons";
 
 interface NavbarProps {
   user?: any;
@@ -14,12 +12,23 @@ interface NavbarProps {
 
 export default function Navbar({ user }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const router = useRouter();
+
+  useEffect(() => {
+    if (isMenuOpen) {
+      document.body.classList.add("overflow-hidden");
+    } else {
+      document.body.classList.remove("overflow-hidden");
+    }
+    // Cleanup function to remove the class when the component unmounts
+    return () => {
+      document.body.classList.remove("overflow-hidden");
+    };
+  }, [isMenuOpen]);
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+  const closeMenu = () => setIsMenuOpen(false);
 
   const navigation = [
-    { name: "Home", href: "/" },
     { name: "My Polls", href: "/polls" },
     { name: "Create Poll", href: "/polls/create" },
   ];
@@ -36,39 +45,16 @@ export default function Navbar({ user }: NavbarProps) {
             <span className="text-xl font-bold">Polly</span>
           </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            {navigation.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-              >
-                {item.name}
-              </Link>
-            ))}
+          <div className="hidden md:flex items-center space-x-6">
+            {/* Desktop Navigation */}
+            <NavLinks
+              links={navigation}
+              linkClassName="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            />
+            {/* Desktop Auth */}
+            <AuthButtons user={user} />
           </div>
 
-          {/* Desktop Auth */}
-          <div className="hidden md:flex items-center space-x-4">
-            {user ? (
-              <div className="flex items-center space-x-4">
-                <span className="text-sm text-muted-foreground">
-                  Hello, {user.email?.split("@")[0]}
-                </span>
-                <LogoutButton />
-              </div>
-            ) : (
-              <div className="flex items-center space-x-2">
-                <Button variant="ghost" size="sm" asChild>
-                  <Link href="/login">Login</Link>
-                </Button>
-                <Button size="sm" asChild>
-                  <Link href="/signup">Sign Up</Link>
-                </Button>
-              </div>
-            )}
-          </div>
 
           {/* Mobile menu button */}
           <button
@@ -82,40 +68,18 @@ export default function Navbar({ user }: NavbarProps) {
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className="md:hidden border-t bg-background">
-            <div className="px-2 pt-2 pb-3 space-y-1">
-              {navigation.map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className="block px-3 py-2 text-base font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {item.name}
-                </Link>
-              ))}
+          <div className="md:hidden border-t bg-background pt-4 pb-4">
+            <div className="px-2 space-y-4">
+              <NavLinks
+                links={navigation}
+                className="space-y-1"
+                linkClassName="block px-3 py-2 text-base font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
+                onClick={closeMenu}
+              />
 
               {/* Mobile Auth */}
-              <div className="border-t mt-4 pt-4">
-                {user ? (
-                  <div className="space-y-2">
-                    <p className="px-3 text-sm text-muted-foreground">
-                      Hello, {user.email?.split("@")[0]}
-                    </p>
-                    <div className="px-3">
-                      <LogoutButton />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <Button variant="ghost" size="sm" className="w-full justify-start" asChild>
-                      <Link href="/login" onClick={() => setIsMenuOpen(false)}>Login</Link>
-                    </Button>
-                    <Button size="sm" className="w-full" asChild>
-                      <Link href="/signup" onClick={() => setIsMenuOpen(false)}>Sign Up</Link>
-                    </Button>
-                  </div>
-                )}
+              <div className="border-t pt-4">
+                <AuthButtons user={user} isMobile onClick={closeMenu} />
               </div>
             </div>
           </div>
