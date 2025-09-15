@@ -8,6 +8,18 @@ interface AuthButtonsProps {
   onClick?: () => void;
 }
 
+/**
+ * Renders authentication UI: a greeting and logout when signed in, or Login/Sign Up links when not.
+ *
+ * If `user` is present, displays "Hello, <local-part>" (derived from `user.email?.split("@")[0]`) and a LogoutButton.
+ * If `user` is absent, renders Login and Sign Up buttons that navigate to `/login` and `/signup`.
+ * Layout and sizing switch between stacked/full-width (mobile) and inline (desktop) based on `isMobile`.
+ * The optional `onClick` handler is forwarded to the Link elements for Login and Sign Up.
+ *
+ * @param user - Authenticated user object; only the `email` local-part is read for the greeting.
+ * @param isMobile - When true, use a vertical/full-width mobile layout; otherwise use a horizontal desktop layout.
+ * @param onClick - Optional click handler forwarded to the Login and Sign Up links.
+ */
 export default function AuthButtons({ user, isMobile, onClick }: AuthButtonsProps) {
   if (user) {
     return (

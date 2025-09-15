@@ -10,6 +10,13 @@ export const metadata: Metadata = {
   description: "Create beautiful, interactive polls to gather real insights from your audience. Share anywhere, track results in real-time, and make data-driven decisions.",
 };
 
+/**
+ * Root layout component that wraps every page, provides global context, and performs a server-side Supabase user lookup.
+ *
+ * This async server component fetches the current user session on the server, passes the resulting `user` to the top-level Navbar, and wraps page content with the QueryProvider to supply a TanStack Query client to descendants.
+ *
+ * @returns The top-level HTML structure for the app containing the QueryProvider, Navbar, and the rendered page children.
+ */
 export default async function RootLayout({
   children,
 }: Readonly<{

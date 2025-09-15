@@ -10,6 +10,17 @@ interface NavbarProps {
   user?: any;
 }
 
+/**
+ * Responsive top navigation bar for the app with desktop and mobile layouts.
+ *
+ * Renders brand logo, navigation links, and authentication controls. On small
+ * screens it shows a toggleable mobile menu; when the mobile menu is open the
+ * component adds `overflow-hidden` to `document.body` and removes it when the
+ * menu closes or the component unmounts to prevent page scrolling.
+ *
+ * @param user - Optional authenticated user object used by the auth controls.
+ * @returns The Navbar React element.
+ */
 export default function Navbar({ user }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 

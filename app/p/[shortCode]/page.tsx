@@ -1,6 +1,14 @@
 import { createClient } from "@/lib/supabase/server"; // Server-side Supabase client
 import { cookies } from "next/headers"; // To get cookies for the server client
-import { redirect } from "next/navigation"; // Next.js redirect function
+import { redirect } from "next/navigation"; /**
+ * Resolve a short URL code to its poll and perform a server-side redirect to that poll's page.
+ *
+ * Looks up `params.shortCode` in the `polls` table (`short_code` column) using the server-side
+ * Supabase client. If `shortCode` is missing, no matching poll is found, or a database error occurs,
+ * the function redirects to the homepage (`/`).
+ *
+ * @param params.shortCode - Short URL code from the dynamic route (e.g., `"abc123"`).
+ */
 
 export default async function ShortLinkRedirectPage({
   params,
