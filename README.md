@@ -37,6 +37,19 @@ Polly is a modern, full-stack polling application built with Next.js, Supabase, 
 
 ---
 
+## AI Usage
+
+This project has been developed with the assistance of AI. Here are the tools and the contexts in which they were used:
+
+-   **Gemini CLI**: Used for a variety of tasks including:
+    -   Generating boilerplate code for components and API routes.
+    -   Refactoring existing code for better readability and performance.
+    -   Writing and updating documentation, including this README.
+    -   Debugging complex issues and providing solutions.
+    -   Assisting with the implementation of new features.
+
+---
+
 ## Getting Started
 
 Follow these instructions to get a copy of the project up and running on your local machine for development and testing purposes.
